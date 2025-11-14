@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
-import type { Prisma } from '@prisma/client'
 import { LectureStatus } from '@prisma/client'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -45,8 +44,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
-    // Build a properly typed create data object for Prisma
-    const lectureData: Prisma.LectureCreateInput = {
+    // Build create data object
+    const lectureData = {
       title: title as string,
       description: description ?? undefined,
       isLive: Boolean(isLive),
