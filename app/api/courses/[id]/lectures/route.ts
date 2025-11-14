@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
-import { LectureStatus } from '@prisma/client'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -51,7 +50,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       isLive: Boolean(isLive),
       scheduledAt: isLive && scheduledAt ? new Date(scheduledAt) : undefined,
       zoomLink: isLive ? (zoomLink ?? undefined) : undefined,
-      status: isLive ? LectureStatus.SCHEDULED : LectureStatus.DRAFT,
+      status: isLive ? "SCHEDULED" : "DRAFT",
       course: { connect: { id } },
     }
 
