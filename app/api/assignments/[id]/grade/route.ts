@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || (session.user?.role !== "INSTRUCTOR" && session.user?.role !== "ADMIN")) {

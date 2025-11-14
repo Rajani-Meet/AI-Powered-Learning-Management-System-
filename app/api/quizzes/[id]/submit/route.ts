@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || session.user?.role !== "STUDENT") {
@@ -15,7 +16,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // Get quiz and questions
     const quiz = await prisma.quiz.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { questions: true }
     })
 
@@ -27,7 +28,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const attempt = await prisma.quizAttempt.findUnique({
       where: {
         quizId_studentId: {
-          quizId: params.id,
+          quizId: id,
           studentId: session.user.id!
         }
       }

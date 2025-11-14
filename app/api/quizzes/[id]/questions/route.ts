@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -12,7 +13,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     const questions = await prisma.quizQuestion.findMany({
-      where: { quizId: params.id },
+      where: { quizId: id },
       orderBy: { order: "asc" }
     })
 
@@ -23,8 +24,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || (session.user?.role !== "INSTRUCTOR" && session.user?.role !== "ADMIN")) {
@@ -39,7 +41,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const question = await prisma.quizQuestion.create({
       data: {
-        quizId: params.id,
+        quizId: id,
         type,
         text,
         options,

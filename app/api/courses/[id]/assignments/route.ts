@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || (session.user?.role !== "INSTRUCTOR" && session.user?.role !== "ADMIN")) {
@@ -18,7 +19,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const course = await prisma.course.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!course) {
@@ -35,7 +36,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         description,
         dueDate: new Date(dueDate),
         maxScore: maxScore || 100,
-        courseId: params.id,
+        courseId: id,
       },
     })
 

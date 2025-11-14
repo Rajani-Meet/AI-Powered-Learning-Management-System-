@@ -15,12 +15,21 @@ export interface User {
   updatedAt: Date
 }
 
+export interface CourseMember {
+  id: string
+  courseId: string
+  userId: string
+  user?: User
+  enrolledAt: Date
+}
+
 export interface Course {
   id: string
   title: string
   description?: string
   instructorId: string
   instructor: User
+  members?: CourseMember[]
   lectures?: Lecture[]
   assignments?: Assignment[]
   quizzes?: Quiz[]

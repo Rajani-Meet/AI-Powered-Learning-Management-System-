@@ -85,15 +85,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-blue-50 rounded-md">
-            <p className="text-xs font-semibold text-blue-900 mb-2">Demo Accounts:</p>
-            <ul className="text-xs text-blue-800 space-y-1">
-              <li>Admin: admin@example.com / Admin@123!</li>
-              <li>Instructor: instructor@example.com / Instructor@123!</li>
-              <li>Student: student@example.com / Student@123!</li>
-            </ul>
-          </div>
         </div>
       </Card>
     </div>

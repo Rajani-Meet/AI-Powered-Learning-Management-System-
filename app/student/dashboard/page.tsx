@@ -6,8 +6,8 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { LogOut, BookOpen, TrendingUp, AlertCircle } from "lucide-react"
-import { signOut } from "next-auth/react"
+import { BookOpen, TrendingUp, AlertCircle } from "lucide-react"
+import { AppLayout } from "@/components/layout/app-layout"
 
 export default function StudentDashboard() {
   const { data: session, status } = useSession()
@@ -49,23 +49,9 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{session?.user?.name}</span>
-            <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/auth/login" })}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AppLayout>
+      <div>
+        <h1 className="text-2xl font-bold mb-8">Student Dashboard</h1>
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="p-6">
@@ -116,7 +102,7 @@ export default function StudentDashboard() {
             ))}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

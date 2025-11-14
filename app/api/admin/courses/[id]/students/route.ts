@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -11,8 +11,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const enrollments = await prisma.courseMember.findMany({
-      where: { courseId: params.id },
+      where: { courseId: id },
       include: {
         user: true
       }
@@ -25,7 +26,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -33,6 +34,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const { studentId } = await req.json()
 
     if (!studentId) {
@@ -43,7 +45,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const existing = await prisma.courseMember.findUnique({
       where: {
         courseId_userId: {
-          courseId: params.id,
+          courseId: id,
           userId: studentId
         }
       }
@@ -55,7 +57,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const enrollment = await prisma.courseMember.create({
       data: {
-        courseId: params.id,
+        courseId: id,
         userId: studentId
       }
     })
@@ -67,7 +69,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -75,6 +77,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const { studentId } = await req.json()
 
     if (!studentId) {
@@ -84,7 +87,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     await prisma.courseMember.delete({
       where: {
         courseId_userId: {
-          courseId: params.id,
+          courseId: id,
           userId: studentId
         }
       }

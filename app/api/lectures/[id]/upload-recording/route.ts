@@ -5,8 +5,9 @@ import { NextResponse } from "next/server"
 import { writeFile } from "fs/promises"
 import path from "path"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== "INSTRUCTOR" && session.user?.role !== "ADMIN")) {
@@ -14,7 +15,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const lecture = await prisma.lecture.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { course: true }
     })
 
@@ -42,7 +43,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     await writeFile(filepath, buffer)
     
     await prisma.lecture.update({
-      where: { id: params.id },
+      where: { id },
       data: { 
         videoPath: `videos/${filename}`,
         status: 'COMPLETED'

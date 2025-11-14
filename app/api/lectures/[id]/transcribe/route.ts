@@ -5,7 +5,7 @@ import { transcribeVideo, generateSummary, chunkTranscript, saveTranscript } fro
 import { NextResponse } from "next/server"
 import path from "path"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -13,8 +13,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const lecture = await prisma.lecture.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { course: true }
     })
 
@@ -35,17 +36,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     saveTranscript(lecture.id, transcript, chunks)
     
     await prisma.lecture.update({
-      where: { id: params.id },
+      where: { id },
       data: { transcript, summary }
     })
 
     await prisma.transcriptChunk.deleteMany({
-      where: { lectureId: params.id }
+      where: { lectureId: id }
     })
 
     await prisma.transcriptChunk.createMany({
       data: chunks.map((chunk, index) => ({
-        lectureId: params.id,
+        lectureId: id,
         text: chunk,
         startTime: index * 30,
         endTime: (index + 1) * 30

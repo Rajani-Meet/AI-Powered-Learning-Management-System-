@@ -1,254 +1,183 @@
-"use client"
+"use client";
 
-import { useSession } from "next-auth/react"
-import { useRouter, useParams } from "next/navigation"
-import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { PageLoading } from "@/components/ui/loading"
-import Link from "next/link"
-import { ChevronLeft, Upload, Video } from "lucide-react"
-
-interface Lecture {
-  id: string
-  title: string
-  description: string
-  videoPath?: string
-  courseId: string
-  transcript?: string
-  summary?: string
-}
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter, useParams } from "next/navigation";
+import { Card, CardBody, CardHeader } from "@nextui-org/card";
+import { Button } from "@nextui-org/button";
+import { Input } from "@nextui-org/input";
+import { Textarea } from "@nextui-org/input";
+import { Spinner } from "@nextui-org/spinner";
+import Link from "next/link";
+import { AppLayout } from "@/components/layout/app-layout";
 
 export default function EditLecturePage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const params = useParams()
-  const courseId = params?.id as string
-  const lectureId = params?.lectureId as string
+  const { data: session } = useSession();
+  const router = useRouter();
+  const params = useParams();
+  const courseId = params.id as string;
+  const lectureId = params.lectureId as string;
   
-  const [lecture, setLecture] = useState<Lecture | null>(null)
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [videoFile, setVideoFile] = useState<File | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
-  const [chatMessage, setChatMessage] = useState("")
-  const [chatResponse, setChatResponse] = useState("")
-  const [isChatLoading, setIsChatLoading] = useState(false)
+  const [lecture, setLecture] = useState<any>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/auth/login")
-  }, [status, router])
+    fetchLecture();
+  }, [lectureId]);
 
-  useEffect(() => {
-    const fetchLecture = async () => {
-      try {
-        const response = await fetch(`/api/lectures/${lectureId}`)
-        const data = await response.json()
-        setLecture(data)
-        setTitle(data.title)
-        setDescription(data.description)
-      } catch (error) {
-        console.error(error)
-      } finally {
-        setIsLoading(false)
+  const fetchLecture = async () => {
+    try {
+      const response = await fetch(`/api/lectures/${lectureId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLecture(data);
+        setTitle(data.title || "");
+        setDescription(data.description || "");
       }
+    } catch (error) {
+      console.error("Error fetching lecture:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (lectureId) fetchLecture()
-  }, [lectureId])
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`/api/lectures/${lectureId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description }),
+      });
+
+      if (response.ok) {
+        router.push(`/courses/${courseId}`);
+      }
+    } catch (error) {
+      console.error("Error saving lecture:", error);
+    }
+  };
 
   const handleVideoUpload = async () => {
-    if (!videoFile) return
+    if (!videoFile) return;
 
-    setIsUploading(true)
-    const formData = new FormData()
-    formData.append("video", videoFile)
-    formData.append("title", title)
-    formData.append("description", description)
-
+    setIsUploading(true);
     try {
+      const formData = new FormData();
+      formData.append("video", videoFile);
+
       const response = await fetch(`/api/lectures/${lectureId}/upload`, {
         method: "POST",
         body: formData,
-      })
+      });
 
       if (response.ok) {
-        router.push(`/courses/${courseId}`)
+        await fetchLecture();
+        setVideoFile(null);
       }
     } catch (error) {
-      console.error(error)
+      console.error("Error uploading video:", error);
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
-  const handleChat = async () => {
-    if (!chatMessage.trim()) return
-
-    setIsChatLoading(true)
-    try {
-      const response = await fetch(`/api/lectures/${lectureId}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: chatMessage }),
-      })
-
-      const data = await response.json()
-      setChatResponse(data.response)
-      setChatMessage("")
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsChatLoading(false)
-    }
-  }
-
-  if (status === "loading" || isLoading) {
-    return <PageLoading />
-  }
-
-  if (!lecture) {
-    return <div>Lecture not found</div>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spinner size="lg" />
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <Link href={`/courses/${courseId}`}>
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Edit Lecture</h1>
-        </div>
-      </header>
+    <AppLayout>
+      <div className="mb-6 flex items-center gap-4">
+        <Link href={`/courses/${courseId}`}>
+          <Button variant="light" size="sm">
+            ← Back to Course
+          </Button>
+        </Link>
+        <h1 className="text-2xl font-bold">Edit Lecture</h1>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="p-6">
-          <div className="space-y-6">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <h2 className="text-xl font-semibold">Lecture Details</h2>
+          </CardHeader>
+          <CardBody className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Title</label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Lecture title"
+                placeholder="Enter lecture title"
               />
             </div>
-
+            
             <div>
               <label className="block text-sm font-medium mb-2">Description</label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Lecture description"
-                rows={4}
+                placeholder="Enter lecture description"
+                minRows={3}
               />
             </div>
 
-            {lecture.videoPath && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Current Video</label>
-                <div className="flex items-center gap-2 p-3 bg-gray-100 rounded">
-                  <Video className="h-4 w-4" />
-                  <span className="text-sm">Video uploaded</span>
-                  {!lecture.transcript && (
-                    <span className="text-xs text-blue-600 ml-2">Processing...</span>
-                  )}
-                </div>
-              </div>
-            )}
+            <Button color="primary" onClick={handleSave}>
+              Save Changes
+            </Button>
+          </CardBody>
+        </Card>
 
-            {lecture.summary && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-xl font-semibold">Video Upload</h2>
+          </CardHeader>
+          <CardBody className="space-y-4">
+            {lecture?.videoUrl && (
               <div>
-                <label className="block text-sm font-medium mb-2">AI Summary</label>
-                <div className="p-4 bg-blue-50 rounded border">
-                  <p className="text-sm text-gray-700">{lecture.summary}</p>
-                </div>
-              </div>
-            )}
-
-            {lecture.transcript && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Transcript</label>
-                <div className="p-4 bg-gray-50 rounded border max-h-40 overflow-y-auto">
-                  <p className="text-sm text-gray-600">{lecture.transcript}</p>
-                </div>
-              </div>
-            )}
-
-            {lecture.transcript && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Ask AI about this lecture</label>
-                <div className="border rounded-lg p-4 space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Ask a question about the lecture..."
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleChat()}
-                    />
-                    <Button onClick={handleChat} disabled={isChatLoading || !chatMessage.trim()}>
-                      {isChatLoading ? 'Asking...' : 'Ask'}
-                    </Button>
-                  </div>
-                  {chatResponse && (
-                    <div className="p-3 bg-green-50 rounded border">
-                      <p className="text-sm text-gray-700">{chatResponse}</p>
-                    </div>
-                  )}
-                </div>
+                <p className="text-sm text-gray-600 mb-2">Current video:</p>
+                <video
+                  controls
+                  className="w-full max-w-md rounded-lg"
+                  src={`/api/videos/${lecture.videoUrl}`}
+                >
+                  Your browser does not support the video tag.
+                </video>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                {lecture.videoPath ? "Replace Video" : "Upload Video"}
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="mt-4">
-                    <label htmlFor="video-upload" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-gray-900">
-                        Click to upload video
-                      </span>
-                      <input
-                        id="video-upload"
-                        type="file"
-                        accept="video/*"
-                        className="hidden"
-                        onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                      />
-                    </label>
-                    {videoFile && (
-                      <p className="mt-2 text-sm text-gray-600">
-                        Selected: {videoFile.name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                className="mb-2"
+              />
+              {videoFile && (
+                <p className="text-sm text-gray-600">
+                  Selected: {videoFile.name}
+                </p>
+              )}
             </div>
 
-            <div className="flex gap-4">
-              <Button
-                onClick={handleVideoUpload}
-                disabled={isUploading || !videoFile}
-                className="flex-1"
-              >
-                {isUploading ? "Uploading..." : "Save Changes"}
-              </Button>
-              <Link href={`/courses/${courseId}`}>
-                <Button variant="outline">Cancel</Button>
-              </Link>
-            </div>
-          </div>
+            <Button
+              color="secondary"
+              onClick={handleVideoUpload}
+              isLoading={isUploading}
+              disabled={!videoFile || isUploading}
+            >
+              {isUploading ? "Uploading..." : "Upload Video"}
+            </Button>
+          </CardBody>
         </Card>
-      </main>
-    </div>
-  )
+      </div>
+    </AppLayout>
+  );
 }

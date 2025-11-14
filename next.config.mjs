@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['pdfkit', 'canvas']
-  },
+  serverExternalPackages: ['pdfkit', 'canvas'],
   webpack: (config) => {
     config.resolve.alias.canvas = false
     config.resolve.alias.encoding = false

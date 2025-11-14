@@ -7,8 +7,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { Users, BookOpen, FileText, Edit3, LogOut } from "lucide-react"
-import { signOut } from "next-auth/react"
+import { Users, BookOpen, FileText, Edit3 } from "lucide-react"
+import { AppLayout } from "@/components/layout/app-layout"
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
 
@@ -57,41 +57,27 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{session.user?.email}</span>
-            <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/auth/login" })}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+    <AppLayout>
+      <div>
+        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+        
+        {/* Navigation */}
+        <nav className="mb-8">
+          <div className="flex gap-4">
+            <Link href="/admin/users" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+              Users
+            </Link>
+            <Link href="/admin/courses" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+              Courses
+            </Link>
+            <Link href="/admin/reports" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+              Reports
+            </Link>
+            <Link href="/analytics" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
+              Analytics
+            </Link>
           </div>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex gap-4">
-          <Link href="/admin/users" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
-            Users
-          </Link>
-          <Link href="/admin/courses" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
-            Courses
-          </Link>
-          <Link href="/admin/reports" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
-            Reports
-          </Link>
-          <Link href="/analytics" className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
-            Analytics
-          </Link>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        </nav>
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="p-6">
@@ -186,7 +172,7 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

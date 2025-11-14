@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { email, name, role } = await req.json()
+    const { email, name, role, courseIds = [] } = await req.json()
 
     if (!email || !name || !role) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -27,8 +27,25 @@ export async function POST(req: Request) {
 
     const { user, tempPassword } = await createUser(email, name, role)
 
+    // Allocate courses if student
+    if (role === "STUDENT" && courseIds.length > 0) {
+      await prisma.courseMember.createMany({
+        data: courseIds.map((courseId: string) => ({
+          courseId,
+          userId: user.id,
+        })),
+        skipDuplicates: true,
+      })
+    }
+
+    // Get allocated courses for email
+    const allocatedCourses = courseIds.length > 0 ? await prisma.course.findMany({
+      where: { id: { in: courseIds } },
+      select: { title: true, instructor: { select: { name: true } } }
+    }) : []
+
     // Send email invitation
-    const emailResult = await sendInviteEmail(email, tempPassword)
+    const emailResult = await sendInviteEmail(email, tempPassword, name, allocatedCourses)
     
     if (!emailResult.success) {
       console.error('Failed to send invite email:', emailResult.error)

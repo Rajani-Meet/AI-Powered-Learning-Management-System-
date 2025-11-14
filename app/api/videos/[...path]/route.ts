@@ -2,9 +2,10 @@ import { NextResponse } from "next/server"
 import { readFile } from "fs/promises"
 import path from "path"
 
-export async function GET(req: Request, { params }: { params: { path: string[] } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ path: string[] }> }) {
   try {
-    const filePath = path.join(process.env.STORAGE_PATH || './storage', ...params.path)
+    const { path: pathArray } = await params
+    const filePath = path.join(process.env.STORAGE_PATH || './storage', ...pathArray)
     const file = await readFile(filePath)
     
     const ext = path.extname(filePath).toLowerCase()

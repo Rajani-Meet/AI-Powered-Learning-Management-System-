@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 import { writeFile } from "fs/promises"
 import path from "path"
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -13,6 +13,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const formData = await req.formData()
     const content = formData.get('content') as string
     const file = formData.get('file') as File | null
@@ -23,7 +24,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // Check if assignment exists and is not overdue
     const assignment = await prisma.assignment.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!assignment) {
@@ -38,7 +39,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (file) {
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const filename = `${params.id}_${session.user.id}_${Date.now()}_${file.name}`
+      const filename = `${id}_${session.user.id}_${Date.now()}_${file.name}`
       const filepath = path.join(process.env.STORAGE_PATH || './storage', 'assignments', filename)
       
       await writeFile(filepath, buffer)
@@ -48,7 +49,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const submission = await prisma.submission.upsert({
       where: {
         assignmentId_studentId: {
-          assignmentId: params.id,
+          assignmentId: id,
           studentId: session.user.id!
         }
       },
@@ -58,7 +59,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         submittedAt: new Date()
       },
       create: {
-        assignmentId: params.id,
+        assignmentId: id,
         studentId: session.user.id!,
         content: content || null,
         fileUrl

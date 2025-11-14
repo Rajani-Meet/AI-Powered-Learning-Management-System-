@@ -4,11 +4,13 @@
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { PageLoading } from "@/components/ui/loading"
+import { Card, CardBody, CardHeader } from "@nextui-org/react"
+import { Button } from "@nextui-org/react"
+import { Spinner } from "@nextui-org/react"
 import Link from "next/link"
-import { ChevronLeft, BookOpen, FileText, BarChart3 } from "lucide-react"
+import { ChevronLeft, BookOpen, FileText, BarChart3, Play, Clock, Users } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { AppLayout } from "@/components/layout/app-layout"
 import type { Course } from "@/lib/types"
 
 export default function CoursePage() {
@@ -41,7 +43,11 @@ export default function CoursePage() {
   }, [courseId, session])
 
   if (status === "loading" || isLoading) {
-    return <PageLoading />
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spinner size="lg" />
+      </div>
+    )
   }
 
   if (!course) {
@@ -56,48 +62,50 @@ export default function CoursePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <Link href={session?.user?.role === "STUDENT" ? "/student/dashboard" : "/instructor/dashboard"}>
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold">{course.title}</h1>
-            <p className="text-sm text-gray-600">by {course.instructor.name}</p>
+    <AppLayout>
+      <div className="mb-6 flex items-center gap-4">
+        <Link href={session?.user?.role === "STUDENT" ? "/student/dashboard" : "/instructor/dashboard"}>
+          <Button isIconOnly variant="light" size="sm">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{course.title}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-muted-foreground">by {course.instructor.name}</p>
+            <Badge variant="secondary" className="text-xs">
+              <Users className="h-3 w-3 mr-1" />
+              {course.members?.length || 0} students
+            </Badge>
           </div>
         </div>
-      </header>
+      </div>
 
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-4">
+      <nav className="border-b bg-background mb-6">
+        <div className="flex space-x-8">
           <button
             onClick={() => setActiveTab("lectures")}
-            className={`px-4 py-3 border-b-2 font-medium ${activeTab === "lectures" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600"}`}
+            className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === "lectures" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
           >
-            <BookOpen className="h-4 w-4 mr-2 inline" />
+            <BookOpen className="h-4 w-4 mr-2" />
             Lectures
           </button>
           <button
             onClick={() => setActiveTab("assignments")}
-            className={`px-4 py-3 border-b-2 font-medium ${activeTab === "assignments" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600"}`}
+            className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === "assignments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
           >
-            <FileText className="h-4 w-4 mr-2 inline" />
+            <FileText className="h-4 w-4 mr-2" />
             Assignments
           </button>
           <button
             onClick={() => setActiveTab("quizzes")}
-            className={`px-4 py-3 border-b-2 font-medium ${activeTab === "quizzes" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600"}`}
+            className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === "quizzes" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
           >
-            <BarChart3 className="h-4 w-4 mr-2 inline" />
+            <BarChart3 className="h-4 w-4 mr-2" />
             Quizzes
           </button>
         </div>
       </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "lectures" && (
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -118,35 +126,65 @@ export default function CoursePage() {
                 const isCompleted = lecture.status === 'COMPLETED'
 
                 return (
-                  <Card key={lecture.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <Link href={`/lecture/${lecture.id}`}>
-                          <h3 className="font-semibold text-lg hover:text-blue-600">{lecture.title}</h3>
-                        </Link>
-                        <p className="text-sm text-gray-600 mt-1">{lecture.description}</p>
-                        {lecture.isLive && scheduledTime && (
-                          <p className="text-xs text-blue-600 mt-2">Scheduled: {scheduledTime.toLocaleString()}</p>
-                        )}
+                  <Card key={lecture.id} className="group hover:scale-[1.02] transition-all duration-200" shadow="sm">
+                    <CardBody className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <Play className="h-4 w-4 text-primary" />
+                            </div>
+                            <Link href={`/lecture/${lecture.id}`}>
+                              <h3 className="font-semibold text-lg hover:text-primary transition-colors">{lecture.title}</h3>
+                            </Link>
+                          </div>
+                          <p className="text-sm text-default-500 leading-relaxed">{lecture.description}</p>
+                          <div className="flex items-center gap-4 text-xs text-default-400">
+                            {lecture.isLive && scheduledTime && (
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>Scheduled: {scheduledTime.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          {lecture.isLive && lecture.zoomLink && (
+                            <Button 
+                              size="sm" 
+                              color={isLive ? "danger" : "default"}
+                              isDisabled={!canJoin && !isLive} 
+                              onClick={() => lecture.zoomLink && window.open(lecture.zoomLink, '_blank')}
+                            >
+                              {isLive ? 'Join Live' : canJoin ? 'Join Meeting' : 'Not Available'}
+                            </Button>
+                          )}
+                          {(session?.user?.role === 'INSTRUCTOR' || session?.user?.role === 'ADMIN') && (
+                            <>
+                              <Link href={`/courses/${courseId}/lectures/${lecture.id}`}>
+                                <Button size="sm" variant="bordered">Edit</Button>
+                              </Link>
+                              {lecture.videoPath && !lecture.transcript && (
+                                <Button 
+                                  size="sm" 
+                                  color="secondary"
+                                  onClick={async () => {
+                                    try {
+                                      await fetch(`/api/lectures/${lecture.id}/process`, { method: 'POST' })
+                                      window.location.reload()
+                                    } catch (error) {
+                                      console.error('Processing failed:', error)
+                                    }
+                                  }}
+                                >
+                                  Process
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        {lecture.isLive && lecture.zoomLink && (
-                          <Button 
-                            size="sm" 
-                            disabled={!canJoin && !isLive} 
-                            onClick={() => lecture.zoomLink && window.open(lecture.zoomLink, '_blank')} 
-                            className={isLive ? 'bg-red-500 hover:bg-red-600' : ''}
-                          >
-                            {isLive ? 'Join Live' : canJoin ? 'Join Meeting' : 'Not Available'}
-                          </Button>
-                        )}
-                        {(session?.user?.role === 'INSTRUCTOR' || session?.user?.role === 'ADMIN') && (
-                          <Link href={`/courses/${courseId}/lectures/${lecture.id}`}>
-                            <Button size="sm" variant="outline">Edit</Button>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
+                    </CardBody>
                   </Card>
                 )
               })}
@@ -205,7 +243,7 @@ export default function CoursePage() {
                     </div>
                     {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
                       <Link href={`/instructor/quizzes/${quiz.id}/questions`}>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="bordered">
                           Manage Questions
                         </Button>
                       </Link>
@@ -216,7 +254,6 @@ export default function CoursePage() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </AppLayout>
   )
 }

@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
 import { NextResponse } from "next/server"
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -14,7 +15,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const attempt = await prisma.quizAttempt.findUnique({
       where: {
         quizId_studentId: {
-          quizId: params.id,
+          quizId: id,
           studentId: session.user.id!
         }
       }

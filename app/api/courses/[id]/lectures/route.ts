@@ -5,8 +5,9 @@ import { NextResponse } from "next/server"
 import type { Prisma } from '@prisma/client'
 import { LectureStatus } from '@prisma/client'
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session || (session.user?.role !== "INSTRUCTOR" && session.user?.role !== "ADMIN")) {
@@ -33,7 +34,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // Verify course exists and user has permission
     const course = await prisma.course.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!course) {
@@ -52,7 +53,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       scheduledAt: isLive && scheduledAt ? new Date(scheduledAt) : undefined,
       zoomLink: isLive ? (zoomLink ?? undefined) : undefined,
       status: isLive ? LectureStatus.SCHEDULED : LectureStatus.DRAFT,
-      course: { connect: { id: params.id } },
+      course: { connect: { id } },
     }
 
     const lecture = await prisma.lecture.create({ data: lectureData })
