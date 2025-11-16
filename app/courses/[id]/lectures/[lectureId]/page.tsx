@@ -68,6 +68,8 @@ export default function EditLecturePage() {
     try {
       const formData = new FormData();
       formData.append("video", videoFile);
+      formData.append("title", title);
+      formData.append("description", description);
 
       const response = await fetch(`/api/lectures/${lectureId}/upload`, {
         method: "POST",
@@ -75,11 +77,17 @@ export default function EditLecturePage() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log(result.message); // Log the success message about transcription
         await fetchLecture();
         setVideoFile(null);
+        
+        // Show success message
+        alert("Video uploaded successfully! Transcription and summary generation started in background.");
       }
     } catch (error) {
       console.error("Error uploading video:", error);
+      alert("Error uploading video. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -138,15 +146,18 @@ export default function EditLecturePage() {
         <Card>
           <CardHeader>
             <h2 className="text-xl font-semibold">Video Upload</h2>
+            <p className="text-sm text-default-500 mt-1">
+              Videos are automatically transcribed and summarized using AI after upload
+            </p>
           </CardHeader>
           <CardBody className="space-y-4">
-            {lecture?.videoUrl && (
+            {lecture?.videoPath && (
               <div>
                 <p className="text-sm text-gray-600 mb-2">Current video:</p>
                 <video
                   controls
                   className="w-full max-w-md rounded-lg"
-                  src={`/api/videos/${lecture.videoUrl}`}
+                  src={lecture.videoPath}
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -167,14 +178,21 @@ export default function EditLecturePage() {
               )}
             </div>
 
-            <Button
-              color="secondary"
-              onClick={handleVideoUpload}
-              isLoading={isUploading}
-              disabled={!videoFile || isUploading}
-            >
-              {isUploading ? "Uploading..." : "Upload Video"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                color="secondary"
+                onClick={handleVideoUpload}
+                isLoading={isUploading}
+                disabled={!videoFile || isUploading}
+              >
+                {isUploading ? "Uploading..." : "Upload Video"}
+              </Button>
+              {!isUploading && videoFile && (
+                <p className="text-xs text-default-500">
+                  💡 After upload, the video will be automatically transcribed and summarized. This may take a few minutes.
+                </p>
+              )}
+            </div>
           </CardBody>
         </Card>
       </div>

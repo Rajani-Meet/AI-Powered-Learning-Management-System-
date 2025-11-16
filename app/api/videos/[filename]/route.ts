@@ -28,7 +28,7 @@ export async function GET(
       const chunksize = (end - start) + 1
       const stream = createReadStream(videoPath, { start, end })
       
-      return new NextResponse(stream as any, {
+      const response = new NextResponse(stream as any, {
         status: 206,
         headers: {
           "Content-Range": `bytes ${start}-${end}/${fileSize}`,
@@ -37,14 +37,22 @@ export async function GET(
           "Content-Type": "video/mp4",
         },
       })
+      
+      // Handle stream cleanup
+      stream.on('error', () => stream.destroy())
+      return response
     } else {
       const stream = createReadStream(videoPath)
-      return new NextResponse(stream as any, {
+      const response = new NextResponse(stream as any, {
         headers: {
           "Content-Length": fileSize.toString(),
           "Content-Type": "video/mp4",
         },
       })
+      
+      // Handle stream cleanup
+      stream.on('error', () => stream.destroy())
+      return response
     }
   } catch (error) {
     console.error("Video serving error:", error)

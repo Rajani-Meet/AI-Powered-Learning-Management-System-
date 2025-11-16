@@ -31,10 +31,10 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:shadow-lg transition-shadow">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:shadow-lg group-hover:scale-105 transition-all duration-200">
               <span className="text-white font-bold text-sm">LMS</span>
             </div>
-            <span className="font-bold text-lg hidden sm:inline">EduPlatform</span>
+            <span className="font-bold text-lg hidden sm:inline group-hover:text-primary transition-colors duration-200">EduPlatform</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -42,17 +42,17 @@ export function Header() {
             {session?.user && session.user.role === "ADMIN" && (
               <>
                 <Link href="/dashboard">
-                  <Button variant="ghost" className="hover:bg-accent/20">
+                  <Button variant="ghost" className="hover:bg-accent/20 hover:scale-105 transition-all duration-200">
                     Dashboard
                   </Button>
                 </Link>
                 <Link href="/profile">
-                  <Button variant="ghost" className="hover:bg-accent/20">
+                  <Button variant="ghost" className="hover:bg-accent/20 hover:scale-105 transition-all duration-200">
                     Profile
                   </Button>
                 </Link>
                 <Link href="/admin/dashboard">
-                  <Button variant="ghost" className="hover:bg-accent/20">
+                  <Button variant="ghost" className="hover:bg-accent/20 hover:scale-105 transition-all duration-200">
                     Admin
                   </Button>
                 </Link>
@@ -67,8 +67,8 @@ export function Header() {
             {session?.user ? (
               <div className="hidden sm:flex items-center gap-3">
                 {(session.user.role === "STUDENT" || session.user.role === "INSTRUCTOR") ? (
-                  <Link href="/profile" className="flex items-center gap-2 hover:bg-accent/10 p-2 rounded-lg transition-colors">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Link href="/profile" className="flex items-center gap-2 hover:bg-accent/10 p-2 rounded-lg transition-all duration-200 hover:scale-105">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors duration-200">
                       <span className="text-sm font-medium text-primary">
                         {session.user.name?.charAt(0).toUpperCase()}
                       </span>
@@ -87,7 +87,7 @@ export function Header() {
                       variant="ghost"
                       size="icon"
                       onClick={() => signOut()}
-                      className="hover:bg-destructive/10"
+                      className="hover:bg-destructive/10 hover:scale-110 transition-all duration-200"
                     >
                       <LogOut className="h-4 w-4" />
                     </Button>
@@ -96,7 +96,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/auth/login">
-                <Button className="bg-gradient-to-r from-primary to-accent">
+                <Button className="bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
                   Sign In
                 </Button>
               </Link>
@@ -107,7 +107,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="md:hidden hover:scale-110 transition-all duration-200"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? (
@@ -127,30 +127,30 @@ export function Header() {
               <>
                 {(session.user.role === "STUDENT" || session.user.role === "INSTRUCTOR") ? (
                   <Link href="/profile">
-                    <Button variant="ghost" className="w-full justify-start hover:bg-accent/20">
+                    <Button variant="ghost" className="w-full justify-start hover:bg-accent/20 hover:scale-[1.02] transition-all duration-200">
                       Profile
                     </Button>
                   </Link>
                 ) : (
                   <>
                     <Link href="/dashboard">
-                      <Button variant="ghost" className="w-full justify-start hover:bg-accent/20">
+                      <Button variant="ghost" className="w-full justify-start hover:bg-accent/20 hover:scale-[1.02] transition-all duration-200">
                         Dashboard
                       </Button>
                     </Link>
                     <Link href="/profile">
-                      <Button variant="ghost" className="w-full justify-start hover:bg-accent/20">
+                      <Button variant="ghost" className="w-full justify-start hover:bg-accent/20 hover:scale-[1.02] transition-all duration-200">
                         Profile
                       </Button>
                     </Link>
                     <Link href="/admin/dashboard">
-                      <Button variant="ghost" className="w-full justify-start hover:bg-accent/20">
+                      <Button variant="ghost" className="w-full justify-start hover:bg-accent/20 hover:scale-[1.02] transition-all duration-200">
                         Admin
                       </Button>
                     </Link>
                     <Button
                       variant="ghost"
-                      className="w-full justify-start text-destructive hover:bg-destructive/10"
+                      className="w-full justify-start text-destructive hover:bg-destructive/10 hover:scale-[1.02] transition-all duration-200"
                       onClick={() => signOut()}
                     >
                       <LogOut className="h-4 w-4 mr-2" />

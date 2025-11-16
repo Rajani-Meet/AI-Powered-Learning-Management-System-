@@ -6,8 +6,9 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import Link from "next/link"
-import { ChevronLeft, Upload, FileText } from "lucide-react"
+import { BackButton } from "@/components/ui/back-button"
+import { AppLayout } from "@/components/layout/app-layout"
+import { Upload, FileText } from "lucide-react"
 
 export default function AssignmentPage() {
   const { data: session, status } = useSession()
@@ -89,19 +90,13 @@ export default function AssignmentPage() {
   const canSubmit = session?.user?.role === "STUDENT" && !isOverdue
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">{assignment.title}</h1>
-        </div>
-      </header>
+    <AppLayout>
+      <div className="mb-6">
+        <BackButton href="/dashboard" />
+        <h1 className="text-3xl font-bold mt-4">{assignment.title}</h1>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Assignment Details */}
           <Card className="p-6">
@@ -186,7 +181,7 @@ export default function AssignmentPage() {
             )}
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

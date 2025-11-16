@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
-import OpenAI from "openai"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { chatWithLecture } from "@/lib/ai"
 
 export async function POST(
   request: NextRequest,
@@ -30,24 +26,9 @@ export async function POST(
       return NextResponse.json({ error: "Transcript not available" }, { status: 404 })
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `You are a helpful teaching assistant for the lecture "${lecture.title}". Answer questions based on this transcript: ${lecture.transcript}`
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      max_tokens: 300,
-    })
+    const response = await chatWithLecture(lecture.transcript, message)
 
-    return NextResponse.json({ 
-      response: completion.choices[0]?.message?.content || "I couldn't generate a response." 
-    })
+    return NextResponse.json({ response })
   } catch (error) {
     console.error("Chat error:", error)
     return NextResponse.json({ error: "Chat failed" }, { status: 500 })

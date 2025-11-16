@@ -2,13 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
-import OpenAI from "openai"
-import { createReadStream } from "fs"
+import { transcribeVideo, generateSummary, chunkTranscript, saveTranscript } from "@/lib/ai"
 import path from "path"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
 
 export async function POST(
   request: NextRequest,
@@ -16,44 +11,101 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || (session.user.role !== "INSTRUCTOR" && session.user.role !== "ADMIN")) {
+    
+    if (!session || (session.user?.role !== "INSTRUCTOR" && session.user?.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { id } = await params
     
-    // Get lecture info
+    // Get lecture details
     const lecture = await prisma.lecture.findUnique({
       where: { id },
-      select: { videoPath: true }
+      include: { course: true }
     })
 
-    if (!lecture?.videoPath) {
-      return NextResponse.json({ error: "No video found" }, { status: 404 })
+    if (!lecture || !lecture.videoPath) {
+      return NextResponse.json({ error: "Lecture or video not found" }, { status: 404 })
     }
 
-    // Extract filename from videoPath
-    const filename = lecture.videoPath.split('/').pop()
-    const videoPath = path.join(process.cwd(), "storage", "videos", filename)
+    // Check authorization
+    if (lecture.course.instructorId !== session.user.id && session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    }
 
-    // Mock implementation for demo (replace with actual OpenAI when connection is stable)
-    const mockTranscript = "This is a sample transcript of the uploaded video lecture. The content discusses various topics related to the course material and provides detailed explanations of key concepts. Students can use this transcript to review the lecture content and better understand the material presented."
+    // Get the actual file path
+    const videoPath = path.join(process.env.STORAGE_PATH || './storage', 'videos', path.basename(lecture.videoPath))
     
-    const mockSummary = "This lecture covers key course concepts with detailed explanations. Main topics include fundamental principles, practical applications, and important examples that help students understand the material better."
+    try {
+      // Transcribe video
+      const transcript = await transcribeVideo(videoPath)
+      
+      // Generate summary
+      let summary: string;
+      try {
+        summary = await generateSummary(transcript)
+      } catch (summaryError: any) {
+        console.error(`[Process] Summary generation failed:`, summaryError?.message);
+        // Fallback: use first 500 chars of transcript as summary
+        summary = transcript.substring(0, 500);
+      }
+      
+      // Create transcript chunks for search
+      const chunks = chunkTranscript(transcript)
+      
+      // Save transcript to file system
+      saveTranscript(lecture.id, transcript, chunks)
+      
+      // Update lecture in database
+      await prisma.lecture.update({
+        where: { id },
+        data: { 
+          transcript, 
+          summary,
+          status: 'COMPLETED'
+        }
+      })
 
-    // Update lecture
-    await prisma.lecture.update({
-      where: { id },
-      data: {
-        transcript: mockTranscript,
-        summary: mockSummary,
-      },
-    })
+      // Clear existing chunks and create new ones
+      await prisma.transcriptChunk.deleteMany({
+        where: { lectureId: id }
+      })
 
-    return NextResponse.json({ success: true })
+      await prisma.transcriptChunk.createMany({
+        data: chunks.map((chunk, index) => ({
+          lectureId: id,
+          text: chunk,
+          startTime: index * 30, // Approximate 30-second chunks
+          endTime: (index + 1) * 30
+        }))
+      })
 
+      return NextResponse.json({ 
+        success: true, 
+        message: "Video processed successfully",
+        transcript: transcript.substring(0, 200) + '...',
+        summary 
+      })
+    } catch (processingError) {
+      console.error("Processing error:", processingError)
+      
+      // Update lecture with error status
+      await prisma.lecture.update({
+        where: { id },
+        data: { 
+          transcript: "Transcription failed. Please try again.",
+          summary: "Summary generation failed.",
+          status: 'DRAFT'
+        }
+      })
+      
+      return NextResponse.json({ 
+        error: "Processing failed", 
+        details: processingError.message 
+      }, { status: 500 })
+    }
   } catch (error) {
-    console.error("Processing error:", error)
-    return NextResponse.json({ error: "Processing failed" }, { status: 500 })
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

@@ -27,6 +27,7 @@ export default function LecturePage() {
   const [isLoadingChat, setIsLoadingChat] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("content")
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -43,6 +44,28 @@ export default function LecturePage() {
       const response = await fetch(`/api/lectures/${lectureId}`)
       const data = await response.json()
       setLecture(data)
+      
+      // Check if video exists but no transcript - might be processing
+      if (data.videoPath && !data.transcript) {
+        setIsProcessing(true)
+        // Poll for updates every 10 seconds
+        const pollInterval = setInterval(async () => {
+          try {
+            const pollResponse = await fetch(`/api/lectures/${lectureId}`)
+            const pollData = await pollResponse.json()
+            if (pollData.transcript) {
+              setLecture(pollData)
+              setIsProcessing(false)
+              clearInterval(pollInterval)
+            }
+          } catch (error) {
+            console.error("Polling error:", error)
+          }
+        }, 10000)
+        
+        // Clear interval after 5 minutes
+        setTimeout(() => clearInterval(pollInterval), 300000)
+      }
     } catch (error) {
       console.error("Error fetching lecture:", error)
     } finally {
@@ -147,7 +170,16 @@ export default function LecturePage() {
                   <h2 className="text-xl font-bold">Summary</h2>
                 </CardHeader>
                 <CardBody>
-                  <p className="text-default-700 leading-relaxed">{lecture.summary || "No summary available yet."}</p>
+                  {isProcessing ? (
+                    <div className="flex items-center gap-2 text-default-500">
+                      <Spinner size="sm" />
+                      <span>Generating summary from video transcript...</span>
+                    </div>
+                  ) : (
+                    <p className="text-default-700 leading-relaxed">
+                      {lecture.summary || "No summary available yet."}
+                    </p>
+                  )}
                 </CardBody>
               </Card>
             )}
@@ -159,7 +191,15 @@ export default function LecturePage() {
                 </CardHeader>
                 <CardBody>
                   <div className="max-h-96 overflow-y-auto bg-default-50 p-4 rounded-lg">
-                    {lecture.transcript ? (
+                    {isProcessing ? (
+                      <div className="flex flex-col items-center gap-4 py-8">
+                        <Spinner size="lg" />
+                        <div className="text-center">
+                          <p className="text-default-600 font-medium">Processing video transcript...</p>
+                          <p className="text-default-500 text-sm mt-1">This may take a few minutes depending on video length</p>
+                        </div>
+                      </div>
+                    ) : lecture.transcript ? (
                       <p className="text-default-700 whitespace-pre-wrap leading-relaxed">
                         {lecture.transcript}
                       </p>
