@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 export function ThemeToggle() {
@@ -36,13 +37,12 @@ export function ThemeToggle() {
 
   return (
     <DropdownMenu>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-9 w-9 rounded-full transition-all hover:bg-accent"
-        asChild
-      >
-        <div>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-full transition-all hover:bg-accent"
+        >
           {theme === "dark" ? (
             <Moon className="h-4 w-4 transition-transform" />
           ) : theme === "light" ? (
@@ -51,8 +51,8 @@ export function ThemeToggle() {
             <Monitor className="h-4 w-4 transition-transform" />
           )}
           <span className="sr-only">Toggle theme</span>
-        </div>
-      </Button>
+        </Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Theme Preferences</DropdownMenuLabel>
         <DropdownMenuSeparator />

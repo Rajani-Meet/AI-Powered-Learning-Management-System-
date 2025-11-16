@@ -3,12 +3,13 @@
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Card, CardBody, CardHeader } from "@nextui-org/card"
+import { Button } from "@nextui-org/button"
+import { Input } from "@nextui-org/input"
+import { Textarea } from "@nextui-org/input"
+import { AppLayout } from "@/components/layout/app-layout"
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, BookOpen } from "lucide-react"
 
 export default function NewCoursePage() {
   const { data: session, status } = useSession()
@@ -50,58 +51,105 @@ export default function NewCoursePage() {
   }
 
   if (status === "loading") {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </AppLayout>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <Link href="/instructor/dashboard">
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Create New Course</h1>
-        </div>
-      </header>
+    <AppLayout maxWidth="2xl">
+      <div className="mb-6">
+        <Link href="/instructor/dashboard">
+          <Button variant="light" size="sm" className="mb-4">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        </Link>
+        <h1 className="text-3xl font-bold tracking-tight mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Create New Course
+        </h1>
+        <p className="text-muted-foreground">Set up a new course for your students</p>
+      </div>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+      <Card className="shadow-xl border-0">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Course Title</label>
+              <h2 className="text-xl font-bold">Course Information</h2>
+              <p className="text-sm text-muted-foreground">Fill in the details below</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardBody>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="course-title" className="text-sm font-semibold flex items-center gap-2">
+                Course Title <span className="text-destructive">*</span>
+              </label>
               <Input
+                id="course-title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter course title"
+                placeholder="e.g., Introduction to Web Development"
                 required
+                variant="bordered"
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-2 hover:border-primary/50 transition-colors"
+                }}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
+            <div className="space-y-2">
+              <label htmlFor="course-description" className="text-sm font-semibold">
+                Description
+              </label>
               <Textarea
+                id="course-description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter course description"
-                rows={4}
+                placeholder="Provide a detailed description of the course..."
+                rows={6}
+                className="resize-none"
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-2 hover:border-primary/50 transition-colors"
+                }}
               />
+              <p className="text-xs text-muted-foreground">
+                Describe what students will learn in this course
+              </p>
             </div>
 
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isSubmitting}>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                color="primary"
+                size="lg"
+                className="flex-1 sm:flex-none min-w-[160px] font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
                 {isSubmitting ? "Creating..." : "Create Course"}
               </Button>
-              <Link href="/instructor/dashboard">
-                <Button type="button" variant="outline">
+              <Link href="/instructor/dashboard" className="flex-1 sm:flex-none">
+                <Button type="button" variant="bordered" size="lg" className="w-full sm:w-auto min-w-[120px]">
                   Cancel
                 </Button>
               </Link>
             </div>
           </form>
-        </Card>
-      </main>
-    </div>
+        </CardBody>
+      </Card>
+    </AppLayout>
   )
 }

@@ -5,13 +5,14 @@ import { Providers } from "@/components/providers"
 import { Toaster } from "@/components/ui/toaster"
 import { ErrorBoundary } from "@/components/ui/error-boundary"
 import { ThemeProvider } from "@/components/theme-provider"
+import { GlobalHeader } from "@/components/layout/global-header"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "LMS Platform - Learning Management System",
+  title: "Learning Management System",
   description: "Complete Learning Management Platform with courses, assignments, quizzes, and AI features",
     generator: 'v0.app'
 }
@@ -32,6 +33,7 @@ export default function RootLayout({
         >
           <ErrorBoundary>
             <Providers>
+              <GlobalHeader />
               {children}
               <Toaster />
             </Providers>

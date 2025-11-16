@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import { prisma } from "@/lib/db"
-import { generateStudentReportPDF } from "@/lib/reports"
 import { NextResponse } from "next/server"
 import PDFDocument from "pdfkit"
 
@@ -20,39 +19,55 @@ export async function GET() {
       prisma.submission.findMany({ include: { student: true, assignment: true } }),
     ])
 
-    // Create PDF
-    const doc = new PDFDocument()
-    const buffers = []
+    // Create PDF with minimal config to avoid font issues
+    const doc = new PDFDocument({
+      size: 'A4',
+      margin: 50,
+      font: 'Times-Roman'
+    })
+    
+    const chunks: Buffer[] = []
+    doc.on('data', (chunk) => chunks.push(chunk))
+    
+    const pdfPromise = new Promise<Buffer>((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)))
+      doc.on('error', reject)
+    })
 
-    doc.on("data", buffers.push.bind(buffers))
-    doc.on("end", () => {})
-
-    // Title
-    doc.fontSize(20).text("LMS Platform Report", 100, 100)
-    doc.fontSize(10).text(`Generated: ${new Date().toLocaleDateString()}`, 100, 130)
-
-    // Summary
-    doc.fontSize(14).text("System Summary", 100, 160)
-    doc.fontSize(10).text(`Total Users: ${users.length}`, 100, 185)
-    doc.fontSize(10).text(`Total Courses: ${courses.length}`, 100, 205)
-    doc.fontSize(10).text(`Total Submissions: ${submissions.length}`, 100, 225)
-
-    // Users List
-    doc.addPage().fontSize(14).text("Users", 100, 50)
-    doc.fontSize(9)
-    let yPos = 80
+    // Add content with basic formatting
+    doc.font('Times-Roman')
+    doc.fontSize(20)
+    doc.text('Learning Management System Report', 50, 50)
+    
+    doc.fontSize(12)
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 50, 80)
+    
+    doc.fontSize(16)
+    doc.text('System Summary', 50, 120)
+    
+    doc.fontSize(12)
+    doc.text(`Total Users: ${users.length}`, 50, 150)
+    doc.text(`Total Courses: ${courses.length}`, 50, 170)
+    doc.text(`Total Submissions: ${submissions.length}`, 50, 190)
+    
+    doc.fontSize(16)
+    doc.text('Users', 50, 230)
+    
+    doc.fontSize(10)
+    let yPos = 260
     users.forEach((user) => {
-      doc.text(`${user.name} (${user.email}) - ${user.role}`, 100, yPos)
-      yPos += 20
       if (yPos > 750) {
         doc.addPage()
         yPos = 50
       }
+      doc.text(`${user.name || 'N/A'} (${user.email || 'N/A'}) - ${user.role || 'N/A'}`, 50, yPos)
+      yPos += 15
     })
 
     doc.end()
+    const pdfBuffer = await pdfPromise
 
-    return new Response(Buffer.concat(buffers), {
+    return new Response(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'attachment; filename="lms-report.pdf"',

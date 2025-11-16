@@ -11,7 +11,7 @@ import { Input } from "@nextui-org/react"
 import { Tabs, Tab } from "@nextui-org/react"
 import { Spinner } from "@nextui-org/react"
 import Link from "next/link"
-import { ChevronLeft, Search, MessageSquare, Loader2 } from "lucide-react"
+import { ChevronLeft, Search, MessageSquare, Loader2, FileText } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 
 export default function LecturePage() {
@@ -128,159 +128,232 @@ export default function LecturePage() {
   }
 
   return (
-    <AppLayout>
-      <div className="mb-6 flex items-center gap-4">
+    <AppLayout maxWidth="full">
+      <div className="mb-6">
         <Link href="/dashboard">
-          <Button isIconOnly variant="light" size="sm">
-            <ChevronLeft className="h-4 w-4" />
+          <Button variant="light" size="sm" className="mb-4">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight">{lecture.title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              {lecture.title}
+            </h1>
+            {lecture.description && (
+              <p className="text-muted-foreground text-lg">{lecture.description}</p>
+            )}
+          </div>
+        </div>
       </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             {/* Video Player */}
             {lecture.videoPath && (
-              <Card className="p-6 mb-6">
-                <h2 className="text-xl font-bold mb-4">Video</h2>
-                <video 
-                  controls 
-                  className="w-full rounded-lg"
-                  src={lecture.videoPath}
-                >
-                  Your browser does not support the video tag.
-                </video>
+              <Card className="shadow-xl border-0 overflow-hidden">
+                <div className="relative bg-black aspect-video">
+                  <video 
+                    controls 
+                    className="w-full h-full"
+                    src={lecture.videoPath}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
               </Card>
             )}
 
-            <Tabs 
-              selectedKey={activeTab} 
-              onSelectionChange={(key) => setActiveTab(key as string)}
-              className="mb-6"
-            >
-              <Tab key="content" title="Summary" />
-              <Tab key="transcript" title="Transcript" />
-              <Tab key="search" title="Search" />
-            </Tabs>
+            <Card className="shadow-lg border-0">
+              <Tabs 
+                selectedKey={activeTab} 
+                onSelectionChange={(key) => setActiveTab(key as string)}
+                aria-label="Lecture content tabs"
+                classNames={{
+                  tabList: "gap-0 w-full relative rounded-none p-0 border-b border-divider",
+                  cursor: "h-0.5 bg-primary rounded-t-sm",
+                  tab: "max-w-fit px-6 h-12 data-[selected=true]:text-primary",
+                  tabContent: "group-data-[selected=true]:text-primary font-semibold"
+                }}
+              >
+                <Tab key="content" title="Summary" />
+                <Tab key="transcript" title="Transcript" />
+                <Tab key="search" title="Search" />
+              </Tabs>
 
             {activeTab === "content" && (
-              <Card shadow="sm">
-                <CardHeader>
-                  <h2 className="text-xl font-bold">Summary</h2>
-                </CardHeader>
-                <CardBody>
+              <CardBody className="p-6">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    AI-Generated Summary
+                  </h2>
                   {isProcessing ? (
-                    <div className="flex items-center gap-2 text-default-500">
-                      <Spinner size="sm" />
-                      <span>Generating summary from video transcript...</span>
+                    <div className="flex flex-col items-center justify-center gap-4 py-12">
+                      <Spinner size="lg" color="primary" />
+                      <div className="text-center">
+                        <p className="text-foreground font-medium">Generating summary from video transcript...</p>
+                        <p className="text-muted-foreground text-sm mt-1">This may take a few minutes</p>
+                      </div>
                     </div>
                   ) : (
-                    <p className="text-default-700 leading-relaxed">
-                      {lecture.summary || "No summary available yet."}
-                    </p>
+                    <div className="prose prose-sm max-w-none">
+                      <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                        {lecture.summary || "No summary available yet. The summary will be generated automatically after the video is processed."}
+                      </p>
+                    </div>
                   )}
-                </CardBody>
-              </Card>
+                </div>
+              </CardBody>
             )}
 
             {activeTab === "transcript" && (
-              <Card shadow="sm">
-                <CardHeader>
-                  <h2 className="text-xl font-bold">Full Transcript</h2>
-                </CardHeader>
-                <CardBody>
-                  <div className="max-h-96 overflow-y-auto bg-default-50 p-4 rounded-lg">
+              <CardBody className="p-6">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Full Transcript
+                  </h2>
+                  <div className="max-h-[600px] overflow-y-auto bg-muted/30 p-6 rounded-xl border border-border">
                     {isProcessing ? (
-                      <div className="flex flex-col items-center gap-4 py-8">
-                        <Spinner size="lg" />
+                      <div className="flex flex-col items-center justify-center gap-4 py-12">
+                        <Spinner size="lg" color="primary" />
                         <div className="text-center">
-                          <p className="text-default-600 font-medium">Processing video transcript...</p>
-                          <p className="text-default-500 text-sm mt-1">This may take a few minutes depending on video length</p>
+                          <p className="text-foreground font-medium">Processing video transcript...</p>
+                          <p className="text-muted-foreground text-sm mt-1">This may take a few minutes depending on video length</p>
                         </div>
                       </div>
                     ) : lecture.transcript ? (
-                      <p className="text-default-700 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-foreground whitespace-pre-wrap leading-relaxed">
                         {lecture.transcript}
                       </p>
                     ) : (
-                      <p className="text-default-500 text-center">No transcript available yet.</p>
+                      <p className="text-muted-foreground text-center py-8">No transcript available yet.</p>
                     )}
                   </div>
-                </CardBody>
-              </Card>
+                </div>
+              </CardBody>
             )}
 
             {activeTab === "search" && (
-              <Card shadow="sm">
-                <CardHeader>
-                  <h2 className="text-xl font-bold">Search Transcript</h2>
-                </CardHeader>
-                <CardBody>
-                  <form onSubmit={handleSearch} className="mb-4">
+              <CardBody className="p-6">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <Search className="h-5 w-5 text-primary" />
+                    Search Transcript
+                  </h2>
+                  <form onSubmit={handleSearch} className="space-y-4">
                     <div className="flex gap-2">
                       <Input
                         placeholder="Search lecture content..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         variant="bordered"
+                        classNames={{
+                          input: "text-base",
+                          inputWrapper: "border-2 hover:border-primary/50 transition-colors"
+                        }}
+                        startContent={<Search className="h-4 w-4 text-default-400" />}
                       />
-                      <Button type="submit" color="primary" isIconOnly>
-                        <Search className="h-4 w-4" />
+                      <Button type="submit" color="primary" size="lg" className="px-6">
+                        Search
                       </Button>
                     </div>
                   </form>
 
                   {searchResults.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-3 mt-6">
+                      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        Search Results ({searchResults.length})
+                      </h3>
                       {searchResults.map((result, i) => (
-                        <div key={i} className="text-sm text-default-700 p-3 bg-default-50 rounded-lg">
-                          {result}
+                        <div key={i} className="p-4 bg-muted/30 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                          <p className="text-foreground text-sm leading-relaxed">{result}</p>
                         </div>
                       ))}
                     </div>
                   )}
-                </CardBody>
-              </Card>
+                </div>
+              </CardBody>
             )}
+            </Card>
           </div>
 
-          <div>
-            <Card shadow="sm">
-              <CardHeader>
+          {/* AI Chat Sidebar */}
+          <div className="lg:sticky lg:top-6 h-fit">
+            <Card className="shadow-xl border-0">
+              <CardHeader className="pb-4 border-b border-divider">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-bold">AI Chat</h2>
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">AI Assistant</h2>
+                    <p className="text-xs text-muted-foreground">Ask questions about this lecture</p>
+                  </div>
                 </div>
               </CardHeader>
-              <CardBody>
-                <div className="h-96 bg-default-50 rounded-lg mb-4 p-4 overflow-y-auto">
+              <CardBody className="p-0">
+                <div className="h-[500px] bg-muted/20 p-4 overflow-y-auto flex flex-col gap-4">
                   {chatMessages.length === 0 && (
-                    <p className="text-sm text-default-500 text-center mt-4">Ask questions about the lecture...</p>
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center space-y-2">
+                        <MessageSquare className="h-12 w-12 text-muted-foreground/50 mx-auto" />
+                        <p className="text-sm text-muted-foreground">Ask questions about the lecture...</p>
+                        <p className="text-xs text-muted-foreground/70">The AI will help you understand the content</p>
+                      </div>
+                    </div>
                   )}
                   {chatMessages.map((msg, i) => (
-                    <div key={i} className={`mb-3 ${msg.role === "user" ? "text-right" : "text-left"}`}>
+                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                       <div
-                        className={`inline-block p-3 rounded-lg max-w-xs text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-default-200"}`}
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                          msg.role === "user" 
+                            ? "bg-primary text-primary-foreground rounded-br-sm" 
+                            : "bg-muted text-foreground rounded-bl-sm border border-border"
+                        }`}
                       >
-                        {msg.content}
+                        <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       </div>
                     </div>
                   ))}
-                  {isLoadingChat && <Spinner size="sm" />}
+                  {isLoadingChat && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3 border border-border">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <form onSubmit={handleChat} className="flex gap-2">
-                  <Input
-                    placeholder="Ask a question..."
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    isDisabled={isLoadingChat}
-                    variant="bordered"
-                  />
-                  <Button type="submit" isDisabled={isLoadingChat} color="primary">
-                    Send
-                  </Button>
+                <form onSubmit={handleChat} className="p-4 border-t border-divider">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ask a question..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      isDisabled={isLoadingChat}
+                      variant="bordered"
+                      classNames={{
+                        input: "text-sm",
+                        inputWrapper: "border-2 hover:border-primary/50 transition-colors"
+                      }}
+                    />
+                    <Button 
+                      type="submit" 
+                      isDisabled={isLoadingChat || !chatInput.trim()} 
+                      color="primary"
+                      size="lg"
+                      className="min-w-[80px]"
+                    >
+                      {isLoadingChat ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Send"
+                      )}
+                    </Button>
+                  </div>
                 </form>
               </CardBody>
             </Card>

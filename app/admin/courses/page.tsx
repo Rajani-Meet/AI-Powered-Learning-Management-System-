@@ -3,10 +3,13 @@
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardBody } from "@nextui-org/card"
+import { Button } from "@nextui-org/button"
 import Link from "next/link"
-import { ChevronLeft, BookOpen } from "lucide-react"
+import { BookOpen } from "lucide-react"
+import { AppLayout } from "@/components/layout/app-layout"
+import { BackButton } from "@/components/ui/back-button"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function CoursesPage() {
   const { data: session, status } = useSession()
@@ -37,47 +40,63 @@ export default function CoursesPage() {
   }
 
   if (status === "loading" || isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>
+    return (
+      <AppLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-10 w-64" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48" />
+            ))}
+          </div>
+        </div>
+      </AppLayout>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/admin/dashboard">
-              <Button variant="ghost" size="sm">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <h1 className="text-2xl font-bold">Course Management</h1>
+    <AppLayout maxWidth="full">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">Course Management</h1>
+            <p className="text-muted-foreground">Manage all courses and student enrollments</p>
           </div>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <Card key={course.id} className="p-6 hover:shadow-lg transition">
-              <div className="flex items-start justify-between mb-4">
-                <BookOpen className="h-8 w-8 text-blue-500" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">{course.title}</h3>
-              <p className="text-sm text-gray-600 mb-4">{course.description}</p>
-              <p className="text-xs text-gray-500 mb-4">Instructor: {course.instructor.name}</p>
-              <div className="flex gap-2">
-                <Link href={`/admin/courses/${course.id}/students`} className="flex-1">
-                  <Button size="sm" className="w-full">
-                    Manage Students
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </main>
-    </div>
+        {courses.length === 0 ? (
+          <Card className="p-12 text-center border-dashed shadow-lg">
+            <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No courses found</h3>
+            <p className="text-sm text-muted-foreground">Courses will appear here once created</p>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <Card key={course.id} className="shadow-xl border-0 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group">
+                <CardBody className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <BookOpen className="h-6 w-6 text-primary" />
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">{course.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{course.description}</p>
+                  <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
+                    <span className="font-medium">Instructor:</span>
+                    <span>{course.instructor.name}</span>
+                  </div>
+                  <Link href={`/admin/courses/${course.id}/students`} className="block">
+                    <Button size="lg" className="w-full" color="primary" variant="flat">
+                      Manage Students
+                    </Button>
+                  </Link>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </AppLayout>
   )
 }

@@ -40,7 +40,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const bytes = await file.arrayBuffer()
       const buffer = Buffer.from(bytes)
       const filename = `${id}_${session.user.id}_${Date.now()}_${file.name}`
-      const filepath = path.join(process.env.STORAGE_PATH || './storage', 'assignments', filename)
+      const storageDir = path.join(process.env.STORAGE_PATH || './storage', 'assignments')
+      const filepath = path.join(storageDir, filename)
+      
+      // Ensure directory exists
+      const fs = require('fs')
+      if (!fs.existsSync(storageDir)) {
+        fs.mkdirSync(storageDir, { recursive: true })
+      }
       
       await writeFile(filepath, buffer)
       fileUrl = `assignments/${filename}`

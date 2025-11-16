@@ -62,61 +62,91 @@ export default function CoursePage() {
   }
 
   return (
-    <AppLayout>
-      <div className="mb-6 flex items-center gap-4">
+    <AppLayout maxWidth="full">
+      <div className="mb-8">
         <Link href={session?.user?.role === "STUDENT" ? "/student/dashboard" : "/instructor/dashboard"}>
-          <Button isIconOnly variant="light" size="sm">
-            <ChevronLeft className="h-4 w-4" />
+          <Button variant="light" size="sm" className="mb-4">
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
           </Button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{course.title}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm text-muted-foreground">by {course.instructor.name}</p>
-            <Badge variant="secondary" className="text-xs">
-              <Users className="h-3 w-3 mr-1" />
-              {course.members?.length || 0} students
-            </Badge>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              {course.title}
+            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span className="text-sm">by {course.instructor.name}</span>
+              </div>
+              <Badge variant="secondary" className="text-xs font-medium">
+                <Users className="h-3 w-3 mr-1" />
+                {course.members?.length || 0} students
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
 
-      <nav className="border-b bg-background mb-6">
-        <div className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab("lectures")}
-            className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === "lectures" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
-          >
-            <BookOpen className="h-4 w-4 mr-2" />
-            Lectures
-          </button>
-          <button
-            onClick={() => setActiveTab("assignments")}
-            className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === "assignments" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Assignments
-          </button>
-          <button
-            onClick={() => setActiveTab("quizzes")}
-            className={`flex items-center px-1 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === "quizzes" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground"}`}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Quizzes
-          </button>
-        </div>
-      </nav>
+      <Card className="shadow-lg border-0 mb-6">
+        <nav className="border-b border-divider">
+          <div className="flex space-x-1 p-2">
+            <button
+              onClick={() => setActiveTab("lectures")}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                activeTab === "lectures" 
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              Lectures
+            </button>
+            <button
+              onClick={() => setActiveTab("assignments")}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                activeTab === "assignments" 
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              Assignments
+            </button>
+            <button
+              onClick={() => setActiveTab("quizzes")}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                activeTab === "quizzes" 
+                  ? "bg-primary text-primary-foreground shadow-md" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              Quizzes
+            </button>
+          </div>
+        </nav>
+      </Card>
         {activeTab === "lectures" && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Lectures</h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Lectures</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {course.lectures?.length || 0} lecture{course.lectures?.length !== 1 ? 's' : ''} available
+                </p>
+              </div>
               {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
                 <Link href={`/courses/${courseId}/lectures/new`}>
-                  <Button>Add Lecture</Button>
+                  <Button color="primary" size="lg" className="shadow-lg">
+                    <Play className="h-4 w-4 mr-2" />
+                    Add Lecture
+                  </Button>
                 </Link>
               )}
             </div>
-            <div className="space-y-4">
+            <div className="grid gap-4">
               {course.lectures?.map((lecture) => {
                 const now = new Date()
                 const scheduledTime = lecture.scheduledAt ? new Date(lecture.scheduledAt) : null
@@ -126,38 +156,70 @@ export default function CoursePage() {
                 const isCompleted = lecture.status === 'COMPLETED'
 
                 return (
-                  <Card key={lecture.id} className="group hover:scale-[1.02] transition-all duration-200" shadow="sm">
+                  <Card key={lecture.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg" shadow="sm">
                     <CardBody className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-primary/10">
-                              <Play className="h-4 w-4 text-primary" />
+                      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                        <div className="flex-1 space-y-3 min-w-0">
+                          <div className="flex items-start gap-4">
+                            <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                              <Play className="h-5 w-5 text-primary" />
                             </div>
-                            <Link href={`/lecture/${lecture.id}`}>
-                              <h3 className="font-semibold text-lg hover:text-primary transition-colors">{lecture.title}</h3>
-                            </Link>
-                          </div>
-                          <p className="text-sm text-default-500 leading-relaxed">{lecture.description}</p>
-                          <div className="flex items-center gap-4 text-xs text-default-400">
-                            {lecture.isLive && scheduledTime && (
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                <span>Scheduled: {scheduledTime.toLocaleString()}</span>
+                            <div className="flex-1 min-w-0">
+                              <Link href={`/lecture/${lecture.id}`}>
+                                <h3 className="font-semibold text-xl hover:text-primary transition-colors mb-2">
+                                  {lecture.title}
+                                </h3>
+                              </Link>
+                              {lecture.description && (
+                                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                                  {lecture.description}
+                                </p>
+                              )}
+                              <div className="flex flex-wrap items-center gap-3 mt-3">
+                                {lecture.isLive && scheduledTime && (
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    <span>Scheduled: {scheduledTime.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {lecture.videoPath && (
+                                  <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                                    <Play className="h-3.5 w-3.5" />
+                                    <span>Recording available</span>
+                                  </div>
+                                )}
+                                {lecture.isLive && !lecture.videoPath && (
+                                  <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+                                    <Users className="h-3.5 w-3.5" />
+                                    <span>Live session available</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            </div>
                           </div>
                         </div>
-                        <div className="flex gap-2 ml-4">
-                          {lecture.isLive && lecture.zoomLink && (
+                        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
+                          {lecture.isLive && lecture.zoomLink && !lecture.videoPath && (
                             <Button 
                               size="sm" 
-                              color={isLive ? "danger" : "default"}
-                              isDisabled={!canJoin && !isLive} 
+                              color={isLive ? "danger" : "primary"}
+                              className="font-medium"
                               onClick={() => lecture.zoomLink && window.open(lecture.zoomLink, '_blank')}
                             >
-                              {isLive ? 'Join Live' : canJoin ? 'Join Meeting' : 'Not Available'}
+                              {isLive ? '🔴 Join Live' : 'Join Now'}
                             </Button>
+                          )}
+                          {lecture.videoPath && (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                🎥 Recording Available
+                              </Badge>
+                              <Link href={`/lecture/${lecture.id}`}>
+                                <Button size="sm" color="secondary" className="font-medium">
+                                  Watch Recording
+                                </Button>
+                              </Link>
+                            </div>
                           )}
                           {(session?.user?.role === 'INSTRUCTOR' || session?.user?.role === 'ADMIN') && (
                             <>
@@ -188,69 +250,156 @@ export default function CoursePage() {
                   </Card>
                 )
               })}
+              {(!course.lectures || course.lectures.length === 0) && (
+                <Card className="border-2 border-dashed">
+                  <CardBody className="text-center py-12">
+                    <BookOpen className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No lectures available yet</p>
+                  </CardBody>
+                </Card>
+              )}
             </div>
           </div>
         )}
 
         {activeTab === "assignments" && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Assignments</h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Assignments</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {course.assignments?.length || 0} assignment{course.assignments?.length !== 1 ? 's' : ''} available
+                </p>
+              </div>
               {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
                 <Link href={`/courses/${courseId}/assignments/new`}>
-                  <Button>Add Assignment</Button>
+                  <Button color="primary" size="lg" className="shadow-lg">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Add Assignment
+                  </Button>
                 </Link>
               )}
             </div>
-            <div className="space-y-4">
+            <div className="grid gap-4">
               {course.assignments?.map((assignment) => (
-                <Card key={assignment.id} className="p-4">
-                  <Link href={`/assignment/${assignment.id}`}>
-                    <h3 className="font-semibold text-lg hover:text-blue-600">{assignment.title}</h3>
-                  </Link>
-                  <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>
-                  {assignment.dueDate && (
-                    <p className="text-xs text-gray-500 mt-2">Due: {new Date(assignment.dueDate).toLocaleDateString()}</p>
-                  )}
+                <Card key={assignment.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
+                  <CardBody className="p-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <Link href={`/assignment/${assignment.id}`}>
+                          <h3 className="font-semibold text-xl hover:text-primary transition-colors">
+                            {assignment.title}
+                          </h3>
+                        </Link>
+                        {assignment.description && (
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                            {assignment.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+                          {assignment.dueDate && (
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>Max Score: {assignment.maxScore} points</span>
+                          </div>
+                        </div>
+                      </div>
+                      {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
+                        <Link href={`/instructor/assignments/${assignment.id}/grade`}>
+                          <Button size="sm" color="secondary" className="whitespace-nowrap">
+                            Grade
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </CardBody>
                 </Card>
               ))}
+              {(!course.assignments || course.assignments.length === 0) && (
+                <Card className="border-2 border-dashed">
+                  <CardBody className="text-center py-12">
+                    <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No assignments available yet</p>
+                  </CardBody>
+                </Card>
+              )}
             </div>
           </div>
         )}
 
         {activeTab === "quizzes" && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">Quizzes</h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold">Quizzes</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {course.quizzes?.length || 0} quiz{course.quizzes?.length !== 1 ? 'zes' : ''} available
+                </p>
+              </div>
               {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
                 <Link href={`/courses/${courseId}/quizzes/new`}>
-                  <Button>Add Quiz</Button>
+                  <Button color="primary" size="lg" className="shadow-lg">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Add Quiz
+                  </Button>
                 </Link>
               )}
             </div>
-            <div className="space-y-4">
+            <div className="grid gap-4">
               {course.quizzes?.map((quiz) => (
-                <Card key={quiz.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <Link href={`/quiz/${quiz.id}`}>
-                        <h3 className="font-semibold text-lg hover:text-blue-600">{quiz.title}</h3>
-                      </Link>
-                      <p className="text-sm text-gray-600 mt-1">{quiz.description}</p>
-                      {quiz.dueDate && (
-                        <p className="text-xs text-gray-500 mt-2">Due: {new Date(quiz.dueDate).toLocaleDateString()}</p>
+                <Card key={quiz.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
+                  <CardBody className="p-6">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <Link href={`/quiz/${quiz.id}`}>
+                          <h3 className="font-semibold text-xl hover:text-primary transition-colors">
+                            {quiz.title}
+                          </h3>
+                        </Link>
+                        {quiz.description && (
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                            {quiz.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+                          {quiz.dueDate && (
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>Due: {new Date(quiz.dueDate).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                          {quiz.passingScore && (
+                            <div className="flex items-center gap-1.5">
+                              <BarChart3 className="h-3.5 w-3.5" />
+                              <span>Passing Score: {quiz.passingScore}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
+                        <Link href={`/instructor/quizzes/${quiz.id}/questions`}>
+                          <Button size="sm" variant="bordered" className="whitespace-nowrap">
+                            Manage Questions
+                          </Button>
+                        </Link>
                       )}
                     </div>
-                    {(session?.user?.role === "INSTRUCTOR" || session?.user?.role === "ADMIN") && (
-                      <Link href={`/instructor/quizzes/${quiz.id}/questions`}>
-                        <Button size="sm" variant="bordered">
-                          Manage Questions
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
+                  </CardBody>
                 </Card>
               ))}
+              {(!course.quizzes || course.quizzes.length === 0) && (
+                <Card className="border-2 border-dashed">
+                  <CardBody className="text-center py-12">
+                    <BarChart3 className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">No quizzes available yet</p>
+                  </CardBody>
+                </Card>
+              )}
             </div>
           </div>
         )}

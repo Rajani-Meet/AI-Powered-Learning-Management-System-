@@ -3,10 +3,11 @@
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { ChevronLeft, Download, FileText } from "lucide-react"
+import { Card, CardBody } from "@nextui-org/card"
+import { Button } from "@nextui-org/button"
+import { Download, FileText } from "lucide-react"
+import { AppLayout } from "@/components/layout/app-layout"
+import { BackButton } from "@/components/ui/back-button"
 
 export default function ReportsPage() {
   const { data: session, status } = useSession()
@@ -52,58 +53,74 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <Link href="/admin/dashboard">
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Reports & Exports</h1>
+    <AppLayout maxWidth="full">
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">Reports & Exports</h1>
+            <p className="text-muted-foreground">Generate comprehensive reports in various formats</p>
+          </div>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* PDF Report */}
-          <Card className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <FileText className="h-8 w-8 text-red-500" />
-              <h2 className="text-xl font-semibold">PDF Report</h2>
-            </div>
-            <p className="text-gray-600 mb-6">
-              Download a comprehensive PDF report with all system data, user statistics, and grades.
-            </p>
-            <Button onClick={generatePDFReport} disabled={isGenerating} className="w-full">
-              <Download className="h-4 w-4 mr-2" />
-              Generate PDF
-            </Button>
+          <Card className="shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
+            <CardBody className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 rounded-xl bg-danger/10">
+                  <FileText className="h-8 w-8 text-danger" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">PDF Report</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Comprehensive document format</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Download a comprehensive PDF report with all system data, user statistics, course information, and grades.
+              </p>
+              <Button 
+                onClick={generatePDFReport} 
+                disabled={isGenerating} 
+                color="danger"
+                size="lg"
+                className="w-full shadow-lg"
+                startContent={<Download className="h-4 w-4" />}
+              >
+                {isGenerating ? "Generating..." : "Generate PDF"}
+              </Button>
+            </CardBody>
           </Card>
 
           {/* Excel Report */}
-          <Card className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <FileText className="h-8 w-8 text-green-500" />
-              <h2 className="text-xl font-semibold">Excel Report</h2>
-            </div>
-            <p className="text-gray-600 mb-6">
-              Download system data as an Excel spreadsheet for further analysis and reporting.
-            </p>
-            <Button
-              onClick={generateExcelReport}
-              disabled={isGenerating}
-              className="w-full bg-transparent"
-              variant="outline"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Generate Excel
-            </Button>
+          <Card className="shadow-xl border-0 hover:shadow-2xl transition-all duration-300">
+            <CardBody className="p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 rounded-xl bg-success/10">
+                  <FileText className="h-8 w-8 text-success" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Excel Report</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Spreadsheet format</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Download system data as an Excel spreadsheet for further analysis, filtering, and custom reporting.
+              </p>
+              <Button
+                onClick={generateExcelReport}
+                disabled={isGenerating}
+                color="success"
+                size="lg"
+                variant="flat"
+                className="w-full shadow-lg"
+                startContent={<Download className="h-4 w-4" />}
+              >
+                {isGenerating ? "Generating..." : "Generate Excel"}
+              </Button>
+            </CardBody>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

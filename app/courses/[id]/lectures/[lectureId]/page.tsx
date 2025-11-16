@@ -10,6 +10,7 @@ import { Textarea } from "@nextui-org/input";
 import { Spinner } from "@nextui-org/spinner";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/app-layout";
+import { Play, Video, FileText } from "lucide-react";
 
 export default function EditLecturePage() {
   const { data: session } = useSession();
@@ -102,95 +103,137 @@ export default function EditLecturePage() {
   }
 
   return (
-    <AppLayout>
-      <div className="mb-6 flex items-center gap-4">
+    <AppLayout maxWidth="2xl">
+      <div className="mb-6">
         <Link href={`/courses/${courseId}`}>
-          <Button variant="light" size="sm">
+          <Button variant="light" size="sm" className="mb-4">
             ← Back to Course
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Edit Lecture</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Edit Lecture
+        </h1>
+        <p className="text-muted-foreground">Update lecture details and upload video</p>
       </div>
 
       <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold">Lecture Details</h2>
+        <Card className="shadow-xl border-0">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Play className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Lecture Details</h2>
+                <p className="text-sm text-muted-foreground">Update title and description</p>
+              </div>
+            </div>
           </CardHeader>
           <CardBody className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Title</label>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Title</label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter lecture title"
+                variant="bordered"
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-2 hover:border-primary/50 transition-colors"
+                }}
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold">Description</label>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter lecture description"
-                minRows={3}
+                minRows={4}
+                variant="bordered"
+                classNames={{
+                  input: "text-base",
+                  inputWrapper: "border-2 hover:border-primary/50 transition-colors"
+                }}
               />
             </div>
 
-            <Button color="primary" onClick={handleSave}>
+            <Button 
+              color="primary" 
+              onClick={handleSave}
+              size="lg"
+              className="font-semibold shadow-lg hover:shadow-xl transition-all"
+            >
               Save Changes
             </Button>
           </CardBody>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold">Video Upload</h2>
-            <p className="text-sm text-default-500 mt-1">
-              Videos are automatically transcribed and summarized using AI after upload
-            </p>
-          </CardHeader>
-          <CardBody className="space-y-4">
-            {lecture?.videoPath && (
+        <Card className="shadow-xl border-0">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Video className="h-5 w-5 text-primary" />
+              </div>
               <div>
-                <p className="text-sm text-gray-600 mb-2">Current video:</p>
-                <video
-                  controls
-                  className="w-full max-w-md rounded-lg"
-                  src={lecture.videoPath}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                <h2 className="text-xl font-bold">Video Upload</h2>
+                <p className="text-sm text-muted-foreground">
+                  Videos are automatically transcribed and summarized using AI after upload
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardBody className="space-y-6">
+            {lecture?.videoPath && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold">Current video:</p>
+                <div className="rounded-xl overflow-hidden border-2 border-border">
+                  <video
+                    controls
+                    className="w-full"
+                    src={lecture.videoPath}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
               </div>
             )}
 
-            <div>
-              <input
-                type="file"
-                accept="video/*"
-                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                className="mb-2"
-              />
-              {videoFile && (
-                <p className="text-sm text-gray-600">
-                  Selected: {videoFile.name}
-                </p>
-              )}
-            </div>
+            <div className="space-y-4 p-4 rounded-xl border-2 border-dashed border-border bg-muted/20">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Upload New Video</label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 cursor-pointer"
+                />
+                {videoFile && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Selected: {videoFile.name}
+                  </p>
+                )}
+              </div>
 
-            <div className="space-y-2">
               <Button
                 color="secondary"
                 onClick={handleVideoUpload}
                 isLoading={isUploading}
                 disabled={!videoFile || isUploading}
+                size="lg"
+                className="w-full font-semibold"
               >
                 {isUploading ? "Uploading..." : "Upload Video"}
               </Button>
               {!isUploading && videoFile && (
-                <p className="text-xs text-default-500">
-                  💡 After upload, the video will be automatically transcribed and summarized. This may take a few minutes.
-                </p>
+                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-xs text-foreground flex items-start gap-2">
+                    <span className="text-lg">💡</span>
+                    <span>After upload, the video will be automatically transcribed and summarized. This may take a few minutes depending on video length.</span>
+                  </p>
+                </div>
               )}
             </div>
           </CardBody>
